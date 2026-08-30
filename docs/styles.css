@@ -95,7 +95,9 @@ nav a:hover { color: #fff; }
 .download-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .download-card { display: grid; min-height: 455px; padding: 28px; border: 1px solid #ffffff1f; border-radius: 14px; background: #ffffff08; transition: transform .2s, background .2s; }
 .download-card:hover, .download-card.detected { transform: translateY(-5px); background: #ffffff0e; border-color: #d9cb9366; }
-.browser-monogram { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 14px; background: #d9a63f; color: #fff; font: 700 21px var(--serif); }.browser-monogram.firefox { background: #9d4e38; }.browser-monogram.safari { background: #3c7390; }
+.browser-monogram { display: grid; place-items: center; width: 50px; height: 50px; }
+.browser-monogram img { width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 6px 10px #07181235); }
+.browser-monogram.safari img { border-radius: 12px; }
 .download-copy { align-self: end; margin-top: 35px; }.download-copy h3 { margin: 8px 0 11px; font: 400 27px var(--serif); }.download-copy p { min-height: 64px; margin: 0; color: #afc0b8; font-size: 12px; line-height: 1.7; }
 .recommend-badge { display: none; color: var(--gold); font-size: 9px; letter-spacing: .12em; }.download-card.detected .recommend-badge { display: block; }
 .download-link { display: flex; align-items: center; justify-content: space-between; align-self: end; margin: 26px 0 22px; padding: 14px 15px; border-radius: 8px; background: var(--gold); color: var(--forest); font-size: 12px; font-weight: 700; }.download-link:hover { background: #f2e4b2; }
@@ -123,3 +125,16 @@ nav a:hover { color: #fff; }
 }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
+
+.legal-page { min-height: 100vh; padding: 56px max(24px, calc((100vw - 780px) / 2)) 90px; background: var(--paper-light); }
+.legal-page .brand { width: max-content; color: var(--forest); }
+.legal-page article { margin-top: 72px; }
+.legal-page h1 { margin: 0 0 18px; font: 400 clamp(42px, 6vw, 66px)/1.15 var(--serif); letter-spacing: -.04em; }
+.legal-page .lead { margin: 0 0 40px; color: var(--muted); line-height: 1.8; }
+.credit-list { display: grid; border-top: 1px solid var(--line); }
+.credit-list section { display: grid; grid-template-columns: 140px 1fr; gap: 30px; padding: 28px 0; border-bottom: 1px solid var(--line); }
+.credit-list h2 { margin: 0; font: 400 22px var(--serif); }
+.credit-list p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.credit-list a { color: var(--forest-2); text-decoration: underline; text-underline-offset: 3px; }
+.back-link { display: inline-block; margin-top: 38px; color: var(--forest-2); font-size: 12px; }
+@media (max-width: 560px) { .credit-list section { grid-template-columns: 1fr; gap: 10px; } }
