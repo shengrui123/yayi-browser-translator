@@ -97,7 +97,7 @@ nav a:hover { color: #fff; }
 .download-card:hover, .download-card.detected { transform: translateY(-5px); background: #ffffff0e; border-color: #d9cb9366; }
 .browser-monogram { display: grid; place-items: center; width: 50px; height: 50px; }
 .browser-monogram img { width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 6px 10px #07181235); }
-.browser-monogram.safari img { border-radius: 12px; }
+.browser-monogram.userscript img { border-radius: 12px; }
 .download-copy { align-self: end; margin-top: 35px; }.download-copy h3 { margin: 8px 0 11px; font: 400 27px var(--serif); }.download-copy p { min-height: 64px; margin: 0; color: #afc0b8; font-size: 12px; line-height: 1.7; }
 .recommend-badge { display: none; color: var(--gold); font-size: 9px; letter-spacing: .12em; }.download-card.detected .recommend-badge { display: block; }
 .download-link { display: flex; align-items: center; justify-content: space-between; align-self: end; margin: 26px 0 22px; padding: 14px 15px; border-radius: 8px; background: var(--gold); color: var(--forest); font-size: 12px; font-weight: 700; }.download-link:hover { background: #f2e4b2; }

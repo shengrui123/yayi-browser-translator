@@ -1,10 +1,10 @@
 # 雅译 · 浏览器翻译
 
-一套无构建依赖的 Manifest V3 浏览器扩展，将网页和播放器已有字幕翻译为中文。支持 Chrome、Edge、Firefox，以及通过 Apple 官方转换工具封装为 Safari Web Extension。
+一套无构建依赖的网页与字幕翻译工具，将网页和播放器已有字幕翻译为中文。支持 Chrome、Edge、Firefox 扩展，以及可直接安装的 Tampermonkey 油猴脚本。
 
 ## 下载网站
 
-项目包含一套位于 `docs/` 的响应式下载官网，并通过 `.github/workflows/pages.yml` 自动构建插件包、发布到 GitHub Pages。网站会识别 Chrome、Edge、Firefox 或 Safari，并优先展示对应版本。
+项目包含一套位于 `docs/` 的响应式下载官网，并通过 `.github/workflows/pages.yml` 自动构建插件包、发布到 GitHub Pages。网站会识别 Chrome、Edge、Firefox 或 Safari，并优先展示对应的扩展或油猴脚本版本。
 
 仓库根目录的 `vercel.json` 同时支持 Vercel：构建命令为 `sh scripts/build.sh`，静态输出目录为 `docs`。Vercel 项目无需再设置为默认的 `public` 目录。
 
@@ -50,17 +50,14 @@ sh scripts/build.sh
 
 正式发布到 Firefox Add-ons 前，请把 `manifest.firefox.json` 中的示例扩展 ID 改为自己的稳定 ID。
 
-### Safari（macOS）
+### 油猴脚本
 
-需要安装 Xcode。先构建 Chromium 目录，再执行：
+1. 在浏览器中安装 Tampermonkey。
+2. 打开网站下载区并点击“安装油猴脚本”，或直接打开 `userscript/yayi.user.js`。
+3. 在 Tampermonkey 安装页面确认安装。
+4. 从 Tampermonkey 的雅译菜单打开设置，填写自己的 API Key。
 
-```bash
-xcrun safari-web-extension-converter dist/chromium \
-  --project-location dist/safari \
-  --app-name 雅译
-```
-
-随后用 Xcode 打开生成的工程，选择开发团队并运行。Safari → 设置 → 扩展中启用“雅译”，并允许它访问需要翻译的网站。提交 App Store 时还需要配置签名、图标、隐私说明和商店资料。
+油猴版支持网页翻译、还原、选中文字翻译、视频字幕翻译、三种翻译风格和四类 API。快捷键为 `Alt/Option + Shift + T`。
 
 ## API 配置
 
@@ -92,8 +89,9 @@ API Key 与偏好使用 `storage.local` 保存在浏览器本地。需要翻译�
 ## 项目结构
 
 ```text
-manifest.json              Chromium / Safari 源清单
+manifest.json              Chromium 源清单
 manifest.firefox.json      Firefox 清单
+userscript/yayi.user.js    Tampermonkey 油猴脚本
 src/background.js          API 调用、提示词、缓存、右键菜单
 src/content.js             网页文本与字幕识别、覆盖层
 popup/                     扩展弹窗

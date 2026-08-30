@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173f32">
-  <meta name="description" content="雅译是一款支持 Chrome、Edge、Firefox 与 Safari 的网页和视频字幕中文翻译插件，支持 OpenAI、Gemini、DeepL 与自定义 API。">
+  <meta name="description" content="雅译是一款支持 Chrome、Edge、Firefox 与油猴脚本的网页和视频字幕中文翻译工具，支持 OpenAI、Gemini、DeepL 与自定义 API。">
   <meta property="og:type" content="website">
   <meta property="og:title" content="雅译 · 把世界读成中文">
   <meta property="og:description" content="网页与视频字幕翻译插件。准确为骨，自然为气，雅致为神。">
@@ -113,7 +113,7 @@
     <section class="downloads" id="downloads" aria-labelledby="downloads-title">
       <div class="section-heading light">
         <span class="section-index">02 / 下载</span>
-        <div><h2 id="downloads-title">选择你的浏览器</h2><p>当前版本 v0.1.0 · 开发者预览版</p></div>
+        <div><h2 id="downloads-title">选择安装方式</h2><p>当前版本 v0.1.0 · 开发者预览版</p></div>
       </div>
       <div class="download-grid">
         <article class="download-card" data-browser="chromium">
@@ -128,16 +128,16 @@
           <a class="download-link" href="downloads/yayi-firefox.zip" download>下载 ZIP <span>↓</span></a>
           <ol><li>解压 ZIP 文件</li><li>打开 about:debugging</li><li>临时载入 manifest.json</li></ol>
         </article>
-        <article class="download-card" data-browser="safari">
-          <div class="browser-monogram safari"><img src="assets/safari.png" width="50" height="50" alt="Safari Logo"></div>
-          <div class="download-copy"><h3>Safari</h3><p>Safari Web Extension 需要在 macOS 上通过 Xcode 完成一次本地封装。</p></div>
-          <a class="download-link" href="downloads/yayi-safari-source.zip" download>下载转换源 <span>↓</span></a>
-          <ol><li>安装 Xcode</li><li>运行官方转换工具</li><li>在 Safari 设置中启用</li></ol>
+        <article class="download-card" data-browser="userscript">
+          <div class="browser-monogram userscript"><img src="assets/tampermonkey.png" width="50" height="50" alt="Tampermonkey Logo"></div>
+          <div class="download-copy"><h3>油猴脚本</h3><p>适用于已安装 Tampermonkey 的 Chrome、Edge、Firefox、Safari 等浏览器。</p></div>
+          <a class="download-link" href="downloads/yayi.user.js">安装油猴脚本 <span>↗</span></a>
+          <ol><li>先安装 Tampermonkey</li><li>点击上方安装按钮</li><li>在油猴页面确认安装</li></ol>
         </article>
       </div>
       <div class="install-note">
         <span>为什么不是商店一键安装？</span>
-        <p>这是开发者预览版，尚未提交各浏览器商店。ZIP 包适合本地安装与代码审阅；发布商店版本后，下载按钮会自动切换。</p>
+        <p>Chrome 与 Firefox 目前提供开发者 ZIP 包；油猴版点击即可进入脚本安装页。首次使用前，请在雅译菜单中填写自己的翻译 API。</p>
       </div>
     </section>
 

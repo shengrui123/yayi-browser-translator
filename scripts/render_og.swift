@@ -40,7 +40,7 @@ func draw(_ value: String, in rect: NSRect, size: CGFloat, color: NSColor, weigh
 
 draw("雅 译", in: NSRect(x: 184, y: 465, width: 300, height: 54), size: 30, color: gold, weight: .semibold)
 draw("把世界，\n读成中文。", in: NSRect(x: 82, y: 192, width: 710, height: 230), size: 88, color: white, weight: .medium)
-draw("网页与视频字幕翻译插件  ·  Chrome / Firefox / Safari", in: NSRect(x: 88, y: 105, width: 850, height: 42), size: 22, color: muted)
+draw("网页与视频字幕翻译工具  ·  Chrome / Firefox / Tampermonkey", in: NSRect(x: 88, y: 105, width: 850, height: 42), size: 22, color: muted)
 
 let badge = NSBezierPath(roundedRect: NSRect(x: 888, y: 82, width: 220, height: 54), xRadius: 27, yRadius: 27)
 gold.setFill()

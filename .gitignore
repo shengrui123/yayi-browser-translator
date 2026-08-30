@@ -1,5 +1,6 @@
 .DS_Store
 dist/
 docs/downloads/*.zip
+docs/downloads/*.user.js
 *.xcodeproj/xcuserdata/
 DerivedData/

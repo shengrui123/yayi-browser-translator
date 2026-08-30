@@ -11,10 +11,10 @@
     href = "downloads/yayi-firefox.zip";
     message = "已识别 Firefox，为你推荐独立适配版本";
   } else if (/Safari\//i.test(ua) && !/Chrome|Chromium|CriOS|Edg\//i.test(ua)) {
-    browser = "safari";
-    label = "下载 Safari 转换源";
-    href = "downloads/yayi-safari-source.zip";
-    message = "已识别 Safari，需要使用 Xcode 完成本地封装";
+    browser = "userscript";
+    label = "安装油猴脚本";
+    href = "downloads/yayi.user.js";
+    message = "已识别 Safari，可通过 Tampermonkey 安装雅译油猴脚本";
   } else if (/Edg\//i.test(ua)) {
     label = "下载 Edge 版";
     message = "已识别 Microsoft Edge，为你推荐 Chromium 版本";

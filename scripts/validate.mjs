@@ -23,9 +23,14 @@ for (const manifestName of manifests) {
   checked += 1;
 }
 
-for (const file of ["src/config.js", "src/background.js", "src/content.js", "popup/popup.js", "options/options.js"]) {
+for (const file of ["src/config.js", "src/background.js", "src/content.js", "popup/popup.js", "options/options.js", "userscript/yayi.user.js"]) {
   execFileSync(process.execPath, ["--check", path.join(root, file)], { stdio: "pipe" });
   checked += 1;
+}
+
+const userscript = await readFile(path.join(root, "userscript/yayi.user.js"), "utf8");
+for (const directive of ["@name", "@version", "@match", "@grant", "@downloadURL"]) {
+  if (!userscript.includes(`// ${directive}`)) throw new Error(`油猴脚本缺少 ${directive} 元数据`);
 }
 
 const html = await readFile(path.join(root, "options/options.html"), "utf8");
