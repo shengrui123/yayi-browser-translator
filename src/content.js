@@ -16,6 +16,7 @@
   let overlay = null;
   let overlaySource = "";
   let overlayTimer = 0;
+  let floatingSwitcher = null;
 
   function send(message) {
     if (globalThis.browser) return globalThis.browser.runtime.sendMessage(message);
@@ -39,7 +40,7 @@
   function isVisible(node) {
     const parent = node.parentElement;
     if (!parent || SKIP_TAGS.has(parent.tagName) || parent.isContentEditable) return false;
-    if (parent.closest("[data-yayi-ignore], #yayi-subtitle-overlay, #yayi-selection-card, #yayi-toast")) return false;
+    if (parent.closest("[data-yayi-ignore], #yayi-subtitle-overlay, #yayi-selection-card, #yayi-toast, #yayi-floating-switcher")) return false;
     const style = getComputedStyle(parent);
     return style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
   }
@@ -240,6 +241,132 @@
     observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
   }
 
+  const PROVIDERS = {
+    openai: { name: "OpenAI", badge: "AI", model: () => cfg.openaiModel || "OpenAI" },
+    gemini: { name: "Gemini", badge: "G", model: () => cfg.geminiModel || "Gemini" },
+    deepl: { name: "DeepL", badge: "D", model: () => "DeepL" },
+    custom: { name: "自定义 API", badge: "API", model: () => cfg.customModel || "兼容接口" }
+  };
+
+  function clampFloatingTop(top, height = 72) {
+    return Math.max(8, Math.min(top, Math.max(8, innerHeight - height - 8)));
+  }
+
+  function floatingTopFromSettings(height = 72) {
+    const available = Math.max(1, innerHeight - height - 16);
+    const value = Number(cfg.floatingButtonY);
+    const ratio = Number.isFinite(value) ? Math.max(0, Math.min(value, 1)) : 0.38;
+    return 8 + available * ratio;
+  }
+
+  function updateFloatingSwitcher() {
+    if (!floatingSwitcher?.isConnected) return;
+    const provider = PROVIDERS[cfg.provider] || PROVIDERS.openai;
+    const trigger = floatingSwitcher.querySelector(".yayi-floating-trigger");
+    trigger.querySelector("b").textContent = "译";
+    trigger.querySelector("small").textContent = provider.badge;
+    trigger.setAttribute("aria-label", `当前翻译服务：${provider.name}。点击切换，拖动可调整位置`);
+    floatingSwitcher.querySelectorAll("[data-provider]").forEach((button) => {
+      const selected = button.dataset.provider === cfg.provider;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-checked", String(selected));
+      button.querySelector("small").textContent = PROVIDERS[button.dataset.provider].model();
+    });
+  }
+
+  function placeFloatingSwitcher(side = cfg.floatingButtonSide, top = floatingTopFromSettings()) {
+    if (!floatingSwitcher?.isConnected) return;
+    const normalizedSide = side === "left" ? "left" : "right";
+    floatingSwitcher.classList.toggle("yayi-side-left", normalizedSide === "left");
+    floatingSwitcher.classList.toggle("yayi-side-right", normalizedSide === "right");
+    floatingSwitcher.style.left = "";
+    floatingSwitcher.style.right = "";
+    floatingSwitcher.style.top = `${clampFloatingTop(top, floatingSwitcher.offsetHeight || 72)}px`;
+  }
+
+  function closeFloatingMenu() {
+    if (!floatingSwitcher?.isConnected) return;
+    floatingSwitcher.classList.remove("yayi-menu-open");
+    floatingSwitcher.querySelector(".yayi-floating-trigger").setAttribute("aria-expanded", "false");
+  }
+
+  function initFloatingSwitcher() {
+    if (window !== top || floatingSwitcher?.isConnected) return;
+    const root = document.createElement("aside");
+    root.id = "yayi-floating-switcher";
+    root.dataset.yayiIgnore = "true";
+    root.className = cfg.floatingButtonSide === "left" ? "yayi-side-left" : "yayi-side-right";
+    root.innerHTML = `<button class="yayi-floating-trigger" type="button" aria-haspopup="true" aria-expanded="false"><b>译</b><small></small></button><div class="yayi-provider-menu" role="radiogroup" aria-label="切换翻译服务">
+      ${Object.entries(PROVIDERS).map(([key, item]) => `<button type="button" role="radio" data-provider="${key}"><span><b>${item.name}</b><small></small></span><i></i></button>`).join("")}
+      <button class="yayi-provider-settings" type="button">打开完整设置 <span>↗</span></button>
+    </div>`;
+    document.documentElement.appendChild(root);
+    floatingSwitcher = root;
+    placeFloatingSwitcher();
+    updateFloatingSwitcher();
+
+    const trigger = root.querySelector(".yayi-floating-trigger");
+    let pointer = null;
+    let dragged = false;
+    trigger.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      closeFloatingMenu();
+      const rect = root.getBoundingClientRect();
+      pointer = { id: event.pointerId, startX: event.clientX, startY: event.clientY, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+      dragged = false;
+      root.classList.add("yayi-dragging");
+      root.style.left = `${rect.left}px`;
+      root.style.right = "auto";
+    });
+    addEventListener("pointermove", (event) => {
+      if (!pointer || event.pointerId !== pointer.id) return;
+      if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5) dragged = true;
+      const width = root.offsetWidth || 48;
+      const height = root.offsetHeight || 72;
+      root.style.left = `${Math.max(0, Math.min(event.clientX - pointer.offsetX, innerWidth - width))}px`;
+      root.style.top = `${clampFloatingTop(event.clientY - pointer.offsetY, height)}px`;
+    });
+    const finishDrag = async (event) => {
+      if (!pointer || event.pointerId !== pointer.id) return;
+      const rect = root.getBoundingClientRect();
+      const side = rect.left + rect.width / 2 < innerWidth / 2 ? "left" : "right";
+      const available = Math.max(1, innerHeight - rect.height - 16);
+      const ratio = Math.max(0, Math.min((rect.top - 8) / available, 1));
+      pointer = null;
+      root.classList.remove("yayi-dragging");
+      cfg.floatingButtonSide = side;
+      cfg.floatingButtonY = ratio;
+      placeFloatingSwitcher(side, rect.top);
+      try { await api.storage.local.set({ floatingButtonSide: side, floatingButtonY: ratio }); } catch { /* restricted storage */ }
+    };
+    addEventListener("pointerup", finishDrag);
+    addEventListener("pointercancel", finishDrag);
+    trigger.addEventListener("click", () => {
+      if (dragged) { dragged = false; return; }
+      const open = !root.classList.contains("yayi-menu-open");
+      root.classList.toggle("yayi-menu-up", root.getBoundingClientRect().top > innerHeight / 2);
+      root.classList.toggle("yayi-menu-open", open);
+      trigger.setAttribute("aria-expanded", String(open));
+    });
+    root.querySelectorAll("[data-provider]").forEach((button) => button.addEventListener("click", async () => {
+      const provider = button.dataset.provider;
+      cfg.provider = provider;
+      await api.storage.local.set({ provider });
+      updateFloatingSwitcher();
+      closeFloatingMenu();
+      toast(`已切换至 ${PROVIDERS[provider].name}`, "success");
+    }));
+    root.querySelector(".yayi-provider-settings").addEventListener("click", () => api.runtime.openOptionsPage());
+    addEventListener("resize", () => placeFloatingSwitcher(), { passive: true });
+    addEventListener("pointerdown", (event) => { if (!root.contains(event.target)) closeFloatingMenu(); }, { passive: true });
+    api.storage.onChanged?.addListener((changes, area) => {
+      if (area !== "local") return;
+      for (const [key, change] of Object.entries(changes)) cfg[key] = change.newValue;
+      updateFloatingSwitcher();
+      if (changes.floatingButtonSide || changes.floatingButtonY) placeFloatingSwitcher();
+    });
+  }
+
   api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const run = async () => {
       if (message.type === "TRANSLATE_PAGE") await translatePage();
@@ -263,6 +390,7 @@
       subtitleEnabled = cfg.translateSubtitles !== false;
       scanVideos();
       observeDynamicContent();
+      initFloatingSwitcher();
       addEventListener("resize", () => positionOverlay(document.querySelector("video")), { passive: true });
       if (cfg.autoTranslate && window === top) translatePage();
     } catch (error) { console.warn("[雅译] 初始化失败", error); }

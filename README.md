@@ -23,6 +23,7 @@ python3 -m http.server 4173 --directory docs
 - 原生 `TextTrack` 字幕和 YouTube、Video.js、JW Player、Plyr、Shaka 等常见 DOM 字幕层
 - 双语对照、术语表、自动翻译、右键翻译选中内容
 - 内存级译文缓存，减少同一浏览会话中的重复请求
+- 可拖动的网页悬浮按钮，松手后自动贴边，并可快速切换 OpenAI、Gemini、DeepL 或自定义 API
 
 ## 安装
 

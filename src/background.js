@@ -113,7 +113,7 @@ async function translate(texts) {
     else { missing.push(text); missingIndexes.push(index); }
   });
   if (missing.length) {
-    const fn = { openai: openAI, gemini, deepl, custom }[cfg.provider];
+    const fn = { openai: openAI, gemini, deepl: deepL, custom }[cfg.provider];
     if (!fn) throw new Error(`不支持的服务商：${cfg.provider}`);
     const translated = await fn(missing, cfg);
     translated.forEach((text, i) => {

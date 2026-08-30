@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>雅译悬浮按钮交互测试</title>
+  <link rel="stylesheet" href="../../src/content.css">
+  <style>
+    body { min-height: 160vh; margin: 0; padding: 60px; background: #f3efe5; color: #17231d; font: 16px/1.8 system-ui, sans-serif; }
+    article { max-width: 720px; margin: auto; padding: 42px; border: 1px solid #d8d3c7; background: #fff; }
+  </style>
+</head>
+<body>
+  <article data-yayi-ignore>
+    <h1>悬浮按钮交互测试</h1>
+    <p>按钮应贴在视口边缘；点击后显示四种翻译服务，拖动并松开后吸附到最近一侧。</p>
+  </article>
+  <script>
+    const listeners = [];
+    window.chrome = {
+      runtime: {
+        lastError: null,
+        onMessage: { addListener() {} },
+        openOptionsPage() { window.__yayiOptionsOpened = true; },
+        sendMessage(message, callback) {
+          if (message.type === "GET_SETTINGS") callback({
+            ok: true,
+            settings: {
+              provider: "openai",
+              openaiModel: "gpt-5.6-luna",
+              geminiModel: "gemini-3.7-flash",
+              customModel: "private-model",
+              floatingButtonSide: "right",
+              floatingButtonY: 0.38,
+              translateSubtitles: true,
+              batchSize: 18,
+              minTextLength: 2
+            }
+          });
+        }
+      },
+      storage: {
+        local: {
+          async set(value) {
+            window.__yayiSaved = { ...(window.__yayiSaved || {}), ...value };
+            const changes = Object.fromEntries(Object.entries(value).map(([key, newValue]) => [key, { newValue }]));
+            listeners.forEach((listener) => listener(changes, "local"));
+          }
+        },
+        onChanged: { addListener(listener) { listeners.push(listener); } }
+      }
+    };
+  </script>
+  <script src="../../src/content.js"></script>
+</body>
+</html>

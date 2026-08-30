@@ -34,3 +34,51 @@
   text-shadow: 0 1px 3px #000; box-shadow: 0 3px 16px rgba(0,0,0,.2);
 }
 #yayi-subtitle-overlay[hidden] { display: none !important; }
+
+#yayi-floating-switcher {
+  all: initial; position: fixed; z-index: 2147483644; top: 38vh; display: block;
+  box-sizing: border-box; color: #17231d; font: 13px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  filter: drop-shadow(0 10px 24px rgba(6, 24, 18, .24)); touch-action: none;
+}
+#yayi-floating-switcher, #yayi-floating-switcher * { box-sizing: border-box; }
+#yayi-floating-switcher.yayi-side-left { left: 0; }
+#yayi-floating-switcher.yayi-side-right { right: 0; }
+#yayi-floating-switcher.yayi-dragging { transition: none; cursor: grabbing; }
+#yayi-floating-switcher .yayi-floating-trigger {
+  all: initial; display: grid; place-items: center; gap: 2px; width: 46px; height: 72px; padding: 0; border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(155deg, #286f55, #173f32); color: #fff; cursor: grab; user-select: none; touch-action: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+#yayi-floating-switcher.yayi-side-left .yayi-floating-trigger { border-left: 0; border-radius: 0 13px 13px 0; }
+#yayi-floating-switcher.yayi-side-right .yayi-floating-trigger { border-right: 0; border-radius: 13px 0 0 13px; }
+#yayi-floating-switcher .yayi-floating-trigger:focus-visible { outline: 3px solid #e8d597; outline-offset: 2px; }
+#yayi-floating-switcher .yayi-floating-trigger b { font: 700 22px/1 Georgia, "Songti SC", serif; }
+#yayi-floating-switcher .yayi-floating-trigger small { min-width: 22px; padding: 2px 4px; border-radius: 99px; background: rgba(255,255,255,.14); color: #dceae4; font: 700 8px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-align: center; }
+#yayi-floating-switcher .yayi-provider-menu {
+  position: absolute; top: 0; display: none; width: 244px; overflow: hidden; margin: 0; padding: 8px; border: 1px solid rgba(23,63,50,.13); border-radius: 15px;
+  background: rgba(251,249,243,.98); box-shadow: 0 20px 60px rgba(6,24,18,.22); backdrop-filter: blur(18px);
+}
+#yayi-floating-switcher.yayi-side-left .yayi-provider-menu { left: 55px; }
+#yayi-floating-switcher.yayi-side-right .yayi-provider-menu { right: 55px; }
+#yayi-floating-switcher.yayi-menu-up .yayi-provider-menu { top: auto; bottom: 0; }
+#yayi-floating-switcher.yayi-menu-open .yayi-provider-menu { display: grid; gap: 4px; }
+#yayi-floating-switcher .yayi-provider-menu > button {
+  all: initial; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 8px 10px; border-radius: 9px;
+  color: #17231d; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+}
+#yayi-floating-switcher .yayi-provider-menu > button:hover { background: #e9eee8; }
+#yayi-floating-switcher .yayi-provider-menu > button:focus-visible { outline: 2px solid #286f55; outline-offset: -2px; }
+#yayi-floating-switcher .yayi-provider-menu > button span { display: grid; gap: 3px; }
+#yayi-floating-switcher .yayi-provider-menu > button b { color: #203229; font-size: 12px; font-weight: 750; }
+#yayi-floating-switcher .yayi-provider-menu > button small { max-width: 168px; overflow: hidden; color: #7a857f; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+#yayi-floating-switcher .yayi-provider-menu > button i { width: 9px; height: 9px; border: 1px solid #aeb8b2; border-radius: 50%; }
+#yayi-floating-switcher .yayi-provider-menu > button.active { background: #e2ebe5; }
+#yayi-floating-switcher .yayi-provider-menu > button.active i { border: 3px solid #286f55; }
+#yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings { min-height: 38px; margin-top: 4px; border-top: 1px solid #dce1dd; border-radius: 0; color: #426052; font-size: 10px; }
+#yayi-floating-switcher .yayi-provider-settings > span { display: inline; color: inherit; }
+@media (max-width: 420px) {
+  #yayi-floating-switcher .yayi-provider-menu { width: min(244px, calc(100vw - 66px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #yayi-floating-switcher { transition: none !important; }
+}

@@ -20,6 +20,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   bilingual: false,
   autoTranslate: false,
   translateSubtitles: true,
+  floatingButtonSide: "right",
+  floatingButtonY: 0.38,
   batchSize: 18,
   minTextLength: 2
 });

@@ -6,10 +6,12 @@ import process from "node:process";
 const root = process.cwd();
 const manifests = ["manifest.json", "manifest.firefox.json"];
 let checked = 0;
+const versions = new Set();
 
 for (const manifestName of manifests) {
   const manifest = JSON.parse(await readFile(path.join(root, manifestName), "utf8"));
   if (manifest.manifest_version !== 3) throw new Error(`${manifestName}: 必须使用 Manifest V3`);
+  versions.add(manifest.version);
   const referenced = [
     manifest.background?.service_worker,
     ...(manifest.background?.scripts || []),
@@ -22,6 +24,7 @@ for (const manifestName of manifests) {
   for (const file of referenced) await access(path.join(root, file));
   checked += 1;
 }
+if (versions.size !== 1) throw new Error("Chromium 与 Firefox 版本号必须一致");
 
 for (const file of ["src/config.js", "src/background.js", "src/content.js", "popup/popup.js", "options/options.js", "userscript/yayi.user.js"]) {
   execFileSync(process.execPath, ["--check", path.join(root, file)], { stdio: "pipe" });
@@ -32,6 +35,14 @@ const userscript = await readFile(path.join(root, "userscript/yayi.user.js"), "u
 for (const directive of ["@name", "@version", "@match", "@grant", "@downloadURL"]) {
   if (!userscript.includes(`// ${directive}`)) throw new Error(`油猴脚本缺少 ${directive} 元数据`);
 }
+
+const background = await readFile(path.join(root, "src/background.js"), "utf8");
+if (!/deepl\s*:\s*deepL/.test(background)) throw new Error("DeepL 服务映射缺失或命名错误");
+const content = await readFile(path.join(root, "src/content.js"), "utf8");
+if (!content.includes("initFloatingSwitcher()") || !userscript.includes("initFloatingSwitcher()")) {
+  throw new Error("浏览器扩展与油猴脚本必须同时包含悬浮切换按钮");
+}
+execFileSync(process.execPath, [path.join(root, "tests/deepl-background.test.mjs")], { stdio: "pipe" });
 
 const html = await readFile(path.join(root, "options/options.html"), "utf8");
 if (/script\s+src=["']https?:/i.test(html)) throw new Error("设置页不得加载远程脚本");
