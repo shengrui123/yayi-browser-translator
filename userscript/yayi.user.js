@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         雅译 · 网页与字幕翻译
 // @namespace    https://github.com/shengrui123/yayi-browser-translator
-// @version      0.1.1
+// @version      0.1.2
 // @description  将网页和视频字幕翻译成自然、准确的中文，支持 OpenAI、Gemini、DeepL 与自定义 API。
 // @author       雅译
 // @homepageURL  https://shengrui123.github.io/yayi-browser-translator/

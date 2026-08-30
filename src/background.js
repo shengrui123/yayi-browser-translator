@@ -136,6 +136,12 @@ api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     settings().then((value) => sendResponse({ ok: true, settings: value }));
     return true;
   }
+  if (message?.type === "OPEN_OPTIONS") {
+    Promise.resolve(api.runtime.openOptionsPage())
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
 });
 
 api.runtime.onInstalled.addListener(() => {

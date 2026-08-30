@@ -356,7 +356,13 @@
       closeFloatingMenu();
       toast(`已切换至 ${PROVIDERS[provider].name}`, "success");
     }));
-    root.querySelector(".yayi-provider-settings").addEventListener("click", () => api.runtime.openOptionsPage());
+    root.querySelector(".yayi-provider-settings").addEventListener("click", async () => {
+      closeFloatingMenu();
+      try {
+        const response = await send({ type: "OPEN_OPTIONS" });
+        if (!response?.ok) throw new Error(response?.error || "打开设置失败");
+      } catch (error) { toast(`无法打开设置：${error.message}`, "error", 5000); }
+    });
     addEventListener("resize", () => placeFloatingSwitcher(), { passive: true });
     addEventListener("pointerdown", (event) => { if (!root.contains(event.target)) closeFloatingMenu(); }, { passive: true });
     api.storage.onChanged?.addListener((changes, area) => {
