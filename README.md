@@ -6,6 +6,8 @@
 
 项目包含一套位于 `docs/` 的响应式下载官网，并通过 `.github/workflows/pages.yml` 自动构建插件包、发布到 GitHub Pages。网站会识别 Chrome、Edge、Firefox 或 Safari，并优先展示对应版本。
 
+仓库根目录的 `vercel.json` 同时支持 Vercel：构建命令为 `sh scripts/build.sh`，静态输出目录为 `docs`。Vercel 项目无需再设置为默认的 `public` 目录。
+
 本地预览：
 
 ```bash

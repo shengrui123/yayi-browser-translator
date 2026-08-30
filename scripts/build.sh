@@ -27,7 +27,15 @@ if command -v zip >/dev/null 2>&1; then
     cp "$ROOT_DIR/assets/icon-48.png" "$ROOT_DIR/docs/assets/icon-48.png"
     cp "$ROOT_DIR/assets/icon-128.png" "$ROOT_DIR/docs/assets/icon-128.png"
   fi
+else
+  echo "错误：构建环境缺少 zip 命令，无法生成浏览器安装包。" >&2
+  exit 1
 fi
+
+test -f "$ROOT_DIR/docs/index.html"
+test -f "$ROOT_DIR/docs/downloads/yayi-chromium.zip"
+test -f "$ROOT_DIR/docs/downloads/yayi-firefox.zip"
+test -f "$ROOT_DIR/docs/downloads/yayi-safari-source.zip"
 
 echo "已生成：dist/chromium 与 dist/firefox"
 echo "商店压缩包：dist/yayi-chromium.zip 与 dist/yayi-firefox.zip"
