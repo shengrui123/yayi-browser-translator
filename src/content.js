@@ -14,6 +14,7 @@
   let translating = false;
   let subtitleEnabled = true;
   let overlay = null;
+  let overlayVideo = null;
   let overlaySource = "";
   let overlayTimer = 0;
   let floatingSwitcher = null;
@@ -154,6 +155,7 @@
     overlay = document.createElement("div");
     overlay.id = "yayi-subtitle-overlay";
     overlay.dataset.yayiIgnore = "true";
+    overlay.innerHTML = '<span class="yayi-subtitle-text"></span>';
     overlay.hidden = true;
     document.documentElement.appendChild(overlay);
     return overlay;
@@ -161,11 +163,18 @@
 
   function positionOverlay(video) {
     const element = ensureOverlay();
-    if (!video?.isConnected) return;
+    if (!video?.isConnected) return false;
     const rect = video.getBoundingClientRect();
-    element.style.left = `${Math.max(12, rect.left + rect.width * 0.08)}px`;
-    element.style.width = `${Math.max(180, rect.width * 0.84)}px`;
-    element.style.bottom = `${Math.max(24, innerHeight - rect.bottom + rect.height * 0.08)}px`;
+    if (rect.width < 40 || rect.height < 30) {
+      element.hidden = true;
+      return false;
+    }
+    element.style.left = `${rect.left}px`;
+    element.style.top = `${rect.top}px`;
+    element.style.width = `${rect.width}px`;
+    element.style.height = `${rect.height}px`;
+    element.style.paddingBottom = `${Math.max(8, rect.height * 0.075)}px`;
+    return true;
   }
 
   async function showSubtitle(source, video) {
@@ -173,9 +182,11 @@
     if (!subtitleEnabled || !containsForeignText(normalized) || normalized === overlaySource) return;
     overlaySource = normalized;
     const element = ensureOverlay();
-    positionOverlay(video || document.querySelector("video"));
+    const textElement = element.querySelector(".yayi-subtitle-text");
+    overlayVideo = video || document.querySelector("video");
+    if (!positionOverlay(overlayVideo)) return;
     element.hidden = false;
-    element.textContent = "翻译中…";
+    textElement.textContent = "翻译中…";
     try {
       let translated = subtitleCache.get(normalized);
       if (!translated) {
@@ -186,11 +197,11 @@
         if (subtitleCache.size > 500) subtitleCache.delete(subtitleCache.keys().next().value);
       }
       if (overlaySource !== normalized) return;
-      element.textContent = cfg.bilingual ? `${normalized}\n${translated}` : translated;
+      textElement.textContent = cfg.bilingual ? `${normalized}\n${translated}` : translated;
       clearTimeout(overlayTimer);
       overlayTimer = setTimeout(() => { if (overlaySource === normalized) element.hidden = true; }, 8000);
     } catch (error) {
-      element.textContent = `字幕翻译失败：${error.message}`;
+      textElement.textContent = `字幕翻译失败：${error.message}`;
     }
   }
 
@@ -208,9 +219,15 @@
       }
     };
     bindTracks();
-    video.addEventListener("loadedmetadata", bindTracks);
-    video.addEventListener("play", bindTracks);
-    video.addEventListener("timeupdate", () => { bindTracks(); positionOverlay(video); });
+    const refresh = () => { bindTracks(); if (overlayVideo === video) positionOverlay(video); };
+    video.addEventListener("loadedmetadata", refresh);
+    video.addEventListener("play", refresh);
+    video.addEventListener("timeupdate", refresh);
+    if (typeof ResizeObserver === "function") {
+      const resizeObserver = new ResizeObserver(() => { if (overlayVideo === video) positionOverlay(video); });
+      resizeObserver.observe(video);
+      video.__yayiResizeObserver = resizeObserver;
+    }
   }
 
   function scanVideos(root = document) {
@@ -298,6 +315,7 @@
     root.className = cfg.floatingButtonSide === "left" ? "yayi-side-left" : "yayi-side-right";
     root.innerHTML = `<button class="yayi-floating-trigger" type="button" aria-haspopup="true" aria-expanded="false"><b>译</b><small></small></button><div class="yayi-provider-menu" role="radiogroup" aria-label="切换翻译服务">
       ${Object.entries(PROVIDERS).map(([key, item]) => `<button type="button" role="radio" data-provider="${key}"><span><b>${item.name}</b><small></small></span><i></i></button>`).join("")}
+      <button class="yayi-provider-action" type="button"><span><b>翻译当前网页</b><small>使用当前服务翻译可见内容</small></span><strong>译</strong></button>
       <button class="yayi-provider-settings" type="button">打开完整设置 <span>↗</span></button>
     </div>`;
     document.documentElement.appendChild(root);
@@ -356,6 +374,10 @@
       closeFloatingMenu();
       toast(`已切换至 ${PROVIDERS[provider].name}`, "success");
     }));
+    root.querySelector(".yayi-provider-action").addEventListener("click", async () => {
+      closeFloatingMenu();
+      await translatePage();
+    });
     root.querySelector(".yayi-provider-settings").addEventListener("click", async () => {
       closeFloatingMenu();
       try {
@@ -397,7 +419,10 @@
       scanVideos();
       observeDynamicContent();
       initFloatingSwitcher();
-      addEventListener("resize", () => positionOverlay(document.querySelector("video")), { passive: true });
+      const refreshSubtitlePosition = () => positionOverlay(overlayVideo || document.querySelector("video"));
+      addEventListener("resize", refreshSubtitlePosition, { passive: true });
+      addEventListener("scroll", refreshSubtitlePosition, { passive: true, capture: true });
+      document.addEventListener("fullscreenchange", () => requestAnimationFrame(refreshSubtitlePosition));
       if (cfg.autoTranslate && window === top) translatePage();
     } catch (error) { console.warn("[雅译] 初始化失败", error); }
   }

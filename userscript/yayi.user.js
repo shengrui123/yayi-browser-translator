@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         雅译 · 网页与字幕翻译
 // @namespace    https://github.com/shengrui123/yayi-browser-translator
-// @version      0.1.2
+// @version      0.1.3
 // @description  将网页和视频字幕翻译成自然、准确的中文，支持 OpenAI、Gemini、DeepL 与自定义 API。
 // @author       雅译
 // @homepageURL  https://shengrui123.github.io/yayi-browser-translator/
@@ -70,6 +70,7 @@
   let cfg = loadSettings();
   let translating = false;
   let subtitleEnabled = cfg.translateSubtitles !== false;
+  let overlayVideo = null;
   let overlaySource = "";
   let overlayTimer = 0;
   let floatingSwitcher = null;
@@ -78,7 +79,7 @@
     #yayi-toast,#yayi-settings,#yayi-selection-card,#yayi-subtitle-overlay{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;box-sizing:border-box;z-index:2147483647}
     #yayi-toast{position:fixed;right:22px;top:22px;max-width:360px;padding:12px 16px;border:1px solid #ffffff20;border-radius:10px;background:#173f32;color:#fff;box-shadow:0 14px 40px #0004;font-size:13px;opacity:0;transform:translateY(-8px);transition:.2s;pointer-events:none}
     #yayi-toast.yayi-show{opacity:1;transform:none}#yayi-toast.yayi-error{background:#8d332d}#yayi-toast.yayi-success{background:#215a45}
-    #yayi-subtitle-overlay{position:fixed;white-space:pre-line;padding:9px 15px;border-radius:8px;background:#101814df;color:#fff;text-align:center;font-size:clamp(15px,2vw,24px);font-weight:650;line-height:1.45;text-shadow:0 2px 4px #000;pointer-events:none}
+    #yayi-subtitle-overlay{position:fixed;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;padding-inline:7%;pointer-events:none}#yayi-subtitle-overlay[hidden]{display:none!important}#yayi-subtitle-overlay .yayi-subtitle-text{display:block;box-sizing:border-box;max-width:100%;max-height:42%;overflow:hidden;padding:6px 12px;border-radius:6px;background:#101814df;color:#fff;text-align:center;white-space:pre-line;overflow-wrap:anywhere;font-size:clamp(15px,2vw,24px);font-weight:650;line-height:1.4;text-shadow:0 2px 4px #000}
     #yayi-selection-card{position:fixed;right:22px;bottom:22px;width:min(390px,calc(100vw - 44px));padding:20px;border:1px solid #d9d4c8;border-radius:14px;background:#fbf9f3;color:#17231d;box-shadow:0 20px 60px #0003}
     #yayi-selection-card button{position:absolute;right:12px;top:8px;border:0;background:transparent;color:#68726c;font-size:23px;cursor:pointer}.yayi-card-title{margin-bottom:12px;color:#215a45;font-weight:800;letter-spacing:.15em}.yayi-card-source{max-height:90px;overflow:auto;color:#717a74;font-size:12px;line-height:1.6}.yayi-card-result{margin-top:11px;padding-top:11px;border-top:1px solid #dedbd2;font-size:15px;line-height:1.75;white-space:pre-wrap}
     #yayi-settings{position:fixed;inset:0;display:grid;place-items:center;padding:18px;background:#08140f99}
@@ -87,7 +88,7 @@
     #yayi-settings form{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:23px}#yayi-settings label{display:grid;gap:6px;color:#59635d;font-size:12px}#yayi-settings label.wide{grid-column:1/-1}#yayi-settings input,#yayi-settings select,#yayi-settings textarea{width:100%;padding:10px 11px;border:1px solid #cfcabf;border-radius:8px;background:#fff;color:#17231d;font:13px inherit}#yayi-settings textarea{min-height:74px;resize:vertical}#yayi-settings .check{display:flex;align-items:center;gap:8px}#yayi-settings .check input{width:auto}#yayi-settings footer{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding-top:8px}#yayi-settings footer button{padding:11px 18px;border:0;border-radius:8px;background:#173f32;color:#fff;font-weight:700;cursor:pointer}#yayi-settings footer button:first-child{background:#dedbd2;color:#17231d}
     #yayi-floating-switcher{all:initial;position:fixed;z-index:2147483646;top:38vh;display:block;box-sizing:border-box;color:#17231d;font:13px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;filter:drop-shadow(0 10px 24px #0618123d);touch-action:none}#yayi-floating-switcher,#yayi-floating-switcher *{box-sizing:border-box}#yayi-floating-switcher.yayi-side-left{left:0}#yayi-floating-switcher.yayi-side-right{right:0}
     #yayi-floating-switcher .yayi-floating-trigger{all:initial;display:grid;place-items:center;gap:2px;width:46px;height:72px;padding:0;border:1px solid #ffffff29;background:linear-gradient(155deg,#286f55,#173f32);color:#fff;cursor:grab;user-select:none;touch-action:none;box-shadow:inset 0 1px 0 #ffffff1f}#yayi-floating-switcher.yayi-side-left .yayi-floating-trigger{border-left:0;border-radius:0 13px 13px 0}#yayi-floating-switcher.yayi-side-right .yayi-floating-trigger{border-right:0;border-radius:13px 0 0 13px}#yayi-floating-switcher .yayi-floating-trigger b{font:700 22px/1 Georgia,"Songti SC",serif}#yayi-floating-switcher .yayi-floating-trigger small{min-width:22px;padding:2px 4px;border-radius:99px;background:#ffffff24;color:#dceae4;font-size:8px;font-weight:700;line-height:1;text-align:center}
-    #yayi-floating-switcher .yayi-provider-menu{position:absolute;top:0;display:none;width:244px;overflow:hidden;margin:0;padding:8px;border:1px solid #173f3221;border-radius:15px;background:#fbf9f3fa;box-shadow:0 20px 60px #06181238;backdrop-filter:blur(18px)}#yayi-floating-switcher.yayi-side-left .yayi-provider-menu{left:55px}#yayi-floating-switcher.yayi-side-right .yayi-provider-menu{right:55px}#yayi-floating-switcher.yayi-menu-up .yayi-provider-menu{top:auto;bottom:0}#yayi-floating-switcher.yayi-menu-open .yayi-provider-menu{display:grid;gap:4px}#yayi-floating-switcher .yayi-provider-menu>button{all:initial;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:8px 10px;border:0;border-radius:9px;background:transparent;color:#17231d;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}#yayi-floating-switcher .yayi-provider-menu>button:hover{background:#e9eee8}#yayi-floating-switcher .yayi-provider-menu>button span{display:grid;gap:3px;text-align:left}#yayi-floating-switcher .yayi-provider-menu>button b{font-size:12px}#yayi-floating-switcher .yayi-provider-menu>button small{max-width:168px;overflow:hidden;color:#7a857f;font-size:10px;text-overflow:ellipsis;white-space:nowrap}#yayi-floating-switcher .yayi-provider-menu>button i{width:9px;height:9px;border:1px solid #aeb8b2;border-radius:50%}#yayi-floating-switcher .yayi-provider-menu>button.active{background:#e2ebe5}#yayi-floating-switcher .yayi-provider-menu>button.active i{border:3px solid #286f55}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings{min-height:38px;margin-top:4px;border-top:1px solid #dce1dd;border-radius:0;color:#426052;font-size:10px}
+    #yayi-floating-switcher .yayi-provider-menu{position:absolute;top:0;display:none;width:244px;overflow:hidden;margin:0;padding:8px;border:1px solid #173f3221;border-radius:15px;background:#fbf9f3fa;box-shadow:0 20px 60px #06181238;backdrop-filter:blur(18px)}#yayi-floating-switcher.yayi-side-left .yayi-provider-menu{left:55px}#yayi-floating-switcher.yayi-side-right .yayi-provider-menu{right:55px}#yayi-floating-switcher.yayi-menu-up .yayi-provider-menu{top:auto;bottom:0}#yayi-floating-switcher.yayi-menu-open .yayi-provider-menu{display:grid;gap:4px}#yayi-floating-switcher .yayi-provider-menu>button{all:initial;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:8px 10px;border:0;border-radius:9px;background:transparent;color:#17231d;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}#yayi-floating-switcher .yayi-provider-menu>button:hover{background:#e9eee8}#yayi-floating-switcher .yayi-provider-menu>button span{display:grid;gap:3px;text-align:left}#yayi-floating-switcher .yayi-provider-menu>button b{font-size:12px}#yayi-floating-switcher .yayi-provider-menu>button small{max-width:168px;overflow:hidden;color:#7a857f;font-size:10px;text-overflow:ellipsis;white-space:nowrap}#yayi-floating-switcher .yayi-provider-menu>button i{width:9px;height:9px;border:1px solid #aeb8b2;border-radius:50%}#yayi-floating-switcher .yayi-provider-menu>button.active{background:#e2ebe5}#yayi-floating-switcher .yayi-provider-menu>button.active i{border:3px solid #286f55}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action{min-height:50px;margin-top:4px;background:#173f32;color:#fff}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action:hover{background:#215a45}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action b{color:#fff}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action small{color:#bad0c6}#yayi-floating-switcher .yayi-provider-action>strong{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#ffffff21;font:700 13px/1 Georgia,serif}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings{min-height:38px;margin-top:4px;border-top:1px solid #dce1dd;border-radius:0;color:#426052;font-size:10px}
     @media(max-width:620px){#yayi-settings form{grid-template-columns:1fr}#yayi-settings label.wide,#yayi-settings footer{grid-column:1}}
     @media(max-width:420px){#yayi-floating-switcher .yayi-provider-menu{width:min(244px,calc(100vw - 66px))}}
   `);
@@ -315,6 +316,7 @@
       overlay = document.createElement("div");
       overlay.id = "yayi-subtitle-overlay";
       overlay.dataset.yayiIgnore = "true";
+      overlay.innerHTML = '<span class="yayi-subtitle-text"></span>';
       overlay.hidden = true;
       document.documentElement.appendChild(overlay);
     }
@@ -322,12 +324,19 @@
   }
 
   function positionOverlay(video) {
-    if (!video?.isConnected) return;
+    if (!video?.isConnected) return false;
     const rect = video.getBoundingClientRect();
     const overlay = ensureOverlay();
-    overlay.style.left = `${Math.max(12, rect.left + rect.width * 0.08)}px`;
-    overlay.style.width = `${Math.max(180, rect.width * 0.84)}px`;
-    overlay.style.bottom = `${Math.max(24, innerHeight - rect.bottom + rect.height * 0.08)}px`;
+    if (rect.width < 40 || rect.height < 30) {
+      overlay.hidden = true;
+      return false;
+    }
+    overlay.style.left = `${rect.left}px`;
+    overlay.style.top = `${rect.top}px`;
+    overlay.style.width = `${rect.width}px`;
+    overlay.style.height = `${rect.height}px`;
+    overlay.style.paddingBottom = `${Math.max(8, rect.height * 0.075)}px`;
+    return true;
   }
 
   async function showSubtitle(source, video) {
@@ -335,9 +344,11 @@
     if (!subtitleEnabled || !containsForeignText(normalized) || normalized === overlaySource) return;
     overlaySource = normalized;
     const overlay = ensureOverlay();
-    positionOverlay(video || document.querySelector("video"));
+    const textElement = overlay.querySelector(".yayi-subtitle-text");
+    overlayVideo = video || document.querySelector("video");
+    if (!positionOverlay(overlayVideo)) return;
     overlay.hidden = false;
-    overlay.textContent = "翻译中…";
+    textElement.textContent = "翻译中…";
     try {
       let value = subtitleCache.get(normalized);
       if (!value) {
@@ -346,10 +357,10 @@
         if (subtitleCache.size > 500) subtitleCache.delete(subtitleCache.keys().next().value);
       }
       if (overlaySource !== normalized) return;
-      overlay.textContent = cfg.bilingual ? `${normalized}\n${value}` : value;
+      textElement.textContent = cfg.bilingual ? `${normalized}\n${value}` : value;
       clearTimeout(overlayTimer);
       overlayTimer = setTimeout(() => { if (overlaySource === normalized) overlay.hidden = true; }, 8000);
-    } catch (error) { overlay.textContent = `字幕翻译失败：${error.message}`; }
+    } catch (error) { textElement.textContent = `字幕翻译失败：${error.message}`; }
   }
 
   function attachVideo(video) {
@@ -366,8 +377,15 @@
       }
     };
     bindTracks();
-    video.addEventListener("loadedmetadata", bindTracks);
-    video.addEventListener("timeupdate", () => { bindTracks(); positionOverlay(video); });
+    const refresh = () => { bindTracks(); if (overlayVideo === video) positionOverlay(video); };
+    video.addEventListener("loadedmetadata", refresh);
+    video.addEventListener("play", refresh);
+    video.addEventListener("timeupdate", refresh);
+    if (typeof ResizeObserver === "function") {
+      const resizeObserver = new ResizeObserver(() => { if (overlayVideo === video) positionOverlay(video); });
+      resizeObserver.observe(video);
+      video.__yayiResizeObserver = resizeObserver;
+    }
   }
 
   function scanVideos(root = document) {
@@ -456,6 +474,7 @@
     root.className = cfg.floatingButtonSide === "left" ? "yayi-side-left" : "yayi-side-right";
     root.innerHTML = `<button class="yayi-floating-trigger" type="button" aria-haspopup="true" aria-expanded="false"><b>译</b><small></small></button><div class="yayi-provider-menu" role="radiogroup" aria-label="切换翻译服务">
       ${Object.entries(PROVIDERS).map(([key, item]) => `<button type="button" role="radio" data-provider="${key}"><span><b>${item.name}</b><small></small></span><i></i></button>`).join("")}
+      <button class="yayi-provider-action" type="button"><span><b>翻译当前网页</b><small>使用当前服务翻译可见内容</small></span><strong>译</strong></button>
       <button class="yayi-provider-settings" type="button">打开完整设置 <span>↗</span></button>
     </div>`;
     document.documentElement.appendChild(root);
@@ -510,6 +529,10 @@
       closeFloatingMenu();
       toast(`已切换至 ${PROVIDERS[provider].name}`, "success");
     }));
+    root.querySelector(".yayi-provider-action").addEventListener("click", () => {
+      closeFloatingMenu();
+      translatePage();
+    });
     root.querySelector(".yayi-provider-settings").addEventListener("click", () => { closeFloatingMenu(); openSettings(); });
     addEventListener("resize", () => placeFloatingSwitcher(), { passive: true });
     addEventListener("pointerdown", (event) => { if (!root.contains(event.target)) closeFloatingMenu(); }, { passive: true });
@@ -595,7 +618,10 @@
       originalText.size ? restorePage() : translatePage();
     }
   });
-  addEventListener("resize", () => positionOverlay(document.querySelector("video")), { passive: true });
+  const refreshSubtitlePosition = () => positionOverlay(overlayVideo || document.querySelector("video"));
+  addEventListener("resize", refreshSubtitlePosition, { passive: true });
+  addEventListener("scroll", refreshSubtitlePosition, { passive: true, capture: true });
+  document.addEventListener("fullscreenchange", () => requestAnimationFrame(refreshSubtitlePosition));
   initFloatingSwitcher();
   scanVideos();
   observeSubtitles();

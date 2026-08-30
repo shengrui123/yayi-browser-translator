@@ -28,9 +28,14 @@
 
 #yayi-subtitle-overlay {
   all: initial; position: fixed; z-index: 2147483645; box-sizing: border-box;
-  padding: 8px 14px; border-radius: 9px; background: rgba(0,0,0,.76); color: white;
-  text-align: center; white-space: pre-line; pointer-events: none;
-  font: 600 clamp(16px, 2.1vw, 30px)/1.45 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+  padding-inline: 7%; pointer-events: none;
+}
+#yayi-subtitle-overlay .yayi-subtitle-text {
+  box-sizing: border-box; display: block; max-width: 100%; max-height: 42%; overflow: hidden;
+  padding: 6px 12px; border-radius: 6px; background: rgba(0,0,0,.76); color: white;
+  text-align: center; white-space: pre-line; overflow-wrap: anywhere;
+  font: 600 clamp(15px, 2.1vw, 30px)/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   text-shadow: 0 1px 3px #000; box-shadow: 0 3px 16px rgba(0,0,0,.2);
 }
 #yayi-subtitle-overlay[hidden] { display: none !important; }
@@ -74,6 +79,11 @@
 #yayi-floating-switcher .yayi-provider-menu > button i { width: 9px; height: 9px; border: 1px solid #aeb8b2; border-radius: 50%; }
 #yayi-floating-switcher .yayi-provider-menu > button.active { background: #e2ebe5; }
 #yayi-floating-switcher .yayi-provider-menu > button.active i { border: 3px solid #286f55; }
+#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action { min-height: 50px; margin-top: 4px; background: #173f32; color: #fff; }
+#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action:hover { background: #215a45; }
+#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action b { color: #fff; }
+#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action small { color: #bad0c6; }
+#yayi-floating-switcher .yayi-provider-action > strong { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: rgba(255,255,255,.13); font: 700 13px/1 Georgia, serif; }
 #yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings { min-height: 38px; margin-top: 4px; border-top: 1px solid #dce1dd; border-radius: 0; color: #426052; font-size: 10px; }
 #yayi-floating-switcher .yayi-provider-settings > span { display: inline; color: inherit; }
 @media (max-width: 420px) {
