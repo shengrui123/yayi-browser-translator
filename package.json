@@ -1,0 +1,10 @@
+{
+  "name": "yayi-browser-translator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "跨 Safari、Chrome、Firefox 的中文网页与视频字幕翻译扩展",
+  "scripts": {
+    "check": "node scripts/validate.mjs",
+    "build": "sh scripts/build.sh"
+  }
+}

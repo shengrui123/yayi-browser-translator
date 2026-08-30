@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>雅译设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header><div class="mark">译</div><div><h1>雅译设置</h1><p>准确为骨，自然为气，雅致为神。</p></div></header>
+
+    <section>
+      <h2>翻译服务</h2>
+      <div class="provider-grid" id="providers">
+        <label><input type="radio" name="provider" value="openai"><span><b>OpenAI</b><small>语境与表达出色</small></span></label>
+        <label><input type="radio" name="provider" value="gemini"><span><b>Gemini</b><small>快速且适合长文本</small></span></label>
+        <label><input type="radio" name="provider" value="deepl"><span><b>DeepL</b><small>稳定的专业翻译</small></span></label>
+        <label><input type="radio" name="provider" value="custom"><span><b>自定义</b><small>兼容或私有接口</small></span></label>
+      </div>
+
+      <div class="provider-panel" data-provider="openai">
+        <label>API Key<input id="openaiKey" type="password" autocomplete="off" placeholder="sk-…"></label>
+        <div class="two"><label>模型<input id="openaiModel" placeholder="gpt-5.6-luna"></label><label>Base URL<input id="openaiBaseUrl"></label></div>
+      </div>
+      <div class="provider-panel" data-provider="gemini">
+        <label>API Key<input id="geminiKey" type="password" autocomplete="off"></label>
+        <div class="two"><label>模型<input id="geminiModel" placeholder="gemini-3.7-flash"></label><label>Base URL<input id="geminiBaseUrl"></label></div>
+      </div>
+      <div class="provider-panel" data-provider="deepl">
+        <label>API Key<input id="deeplKey" type="password" autocomplete="off"></label>
+        <label>Base URL<input id="deeplBaseUrl" placeholder="https://api-free.deepl.com/v2"></label>
+      </div>
+      <div class="provider-panel" data-provider="custom">
+        <label>请求 URL<input id="customUrl" placeholder="https://example.com/v1/chat/completions"></label>
+        <div class="two"><label>API Key（可选）<input id="customKey" type="password"></label><label>模型（可选）<input id="customModel"></label></div>
+        <label>附加请求头（JSON）<textarea id="customHeaders" rows="3" spellcheck="false">{}</textarea></label>
+        <label>请求体模板（JSON）<textarea id="customBodyTemplate" rows="6" spellcheck="false"></textarea><small>可用占位符：{{model}}、{{prompt}}；{{texts}} 应放在 JSON 字符串之外。</small></label>
+        <label>响应文本路径<input id="customResponsePath" placeholder="choices.0.message.content"><small>支持点号路径；接口也可直接返回 translations 字符串数组。</small></label>
+      </div>
+      <div class="security-note">API 密钥仅保存在当前浏览器的本地扩展存储中，但网页扩展不是专业密钥保险箱。请勿把带有密钥的扩展打包分享；团队或公开发布时应使用自己的后端代理。</div>
+    </section>
+
+    <section>
+      <h2>翻译偏好</h2>
+      <div class="two">
+        <label>目标语言<select id="targetLanguage"><option>简体中文</option><option>繁体中文</option></select></label>
+        <label>译文风格<select id="translationStyle"><option value="faithful">准确直译</option><option value="natural">自然意译</option><option value="elegant">信达雅</option></select></label>
+      </div>
+      <label class="spaced">术语表<textarea id="glossary" rows="5" placeholder="OpenAI = OpenAI&#10;agent = 智能体&#10;prompt = 提示词"></textarea><small>每行一条，可使用“原文 = 译文”。LLM 服务会在提示中遵守它。</small></label>
+      <div class="toggles">
+        <label><input id="bilingual" type="checkbox"><span>双语对照<small>保留原文，并在下方显示译文</small></span></label>
+        <label><input id="autoTranslate" type="checkbox"><span>自动翻译网页<small>打开网页后自动开始（会产生 API 费用）</small></span></label>
+        <label><input id="translateSubtitles" type="checkbox"><span>翻译视频字幕<small>识别原生字幕与常见播放器字幕层</small></span></label>
+      </div>
+      <details><summary>高级设置</summary><div class="two"><label>每批文本段数<input id="batchSize" type="number" min="1" max="40"></label><label>最短文本长度<input id="minTextLength" type="number" min="1" max="20"></label></div></details>
+    </section>
+
+    <div class="actions"><button id="test" class="secondary">测试当前 API</button><button id="save" class="primary">保存设置</button></div>
+    <div id="message" role="status"></div>
+  </main>
+  <script src="../src/config.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

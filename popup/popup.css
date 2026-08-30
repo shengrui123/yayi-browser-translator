@@ -1,0 +1,29 @@
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; width: 330px; background: #f4f1e9; color: #1d2520; }
+main { padding: 18px; }
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #173f32; color: #f0dd9c; font: 700 21px/1 Georgia, serif; box-shadow: 0 5px 14px #173f3233; }
+h1 { margin: 0; font: 700 20px/1.2 Georgia, "Songti SC", serif; letter-spacing: .08em; }
+p { margin: 4px 0 0; color: #6d756f; font-size: 11px; }
+button { border: 0; font: inherit; cursor: pointer; }
+.primary, .secondary { width: 100%; height: 44px; border-radius: 10px; }
+.primary { display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #1d5a44; color: #fff; font-weight: 650; box-shadow: 0 6px 18px #1d5a4429; }
+.primary:hover { background: #174a38; }
+.primary:disabled { opacity: .6; cursor: progress; }
+.primary small { color: #c8ddd4; font-size: 10px; font-weight: 500; }
+.secondary { margin-top: 8px; background: #fffdf7; color: #455149; border: 1px solid #dcd8ce; }
+.secondary:hover { background: #fff; }
+.switch-row { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding: 13px 2px 8px; border-top: 1px solid #ddd8cb; cursor: pointer; }
+.switch-row span { display: grid; gap: 3px; }
+.switch-row strong { font-size: 13px; }
+.switch-row small { color: #737b76; font-size: 10px; }
+.switch-row input { display: none; }
+.switch-row i { position: relative; width: 38px; height: 22px; border-radius: 20px; background: #b8bcb8; transition: .2s; }
+.switch-row i::after { content: ""; position: absolute; width: 18px; height: 18px; top: 2px; left: 2px; border-radius: 50%; background: white; box-shadow: 0 1px 4px #0003; transition: .2s; }
+.switch-row input:checked + i { background: #2a7457; }
+.switch-row input:checked + i::after { transform: translateX(16px); }
+#status { min-height: 18px; margin-top: 8px; color: #a13a32; font-size: 11px; text-align: center; }
+footer { margin: 4px -18px -18px; border-top: 1px solid #ddd8cb; }
+footer button { display: flex; justify-content: space-between; width: 100%; padding: 13px 18px; background: transparent; color: #55605a; font-size: 12px; text-align: left; }
+footer button:hover { background: #ebe7dc; }

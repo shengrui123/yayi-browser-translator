@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>雅译</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div class="mark">译</div>
+      <div><h1>雅译</h1><p id="provider">正在读取设置…</p></div>
+    </header>
+    <button id="translate" class="primary"><span>翻译当前网页</span><small>⌥ ⇧ T</small></button>
+    <button id="restore" class="secondary">还原原文</button>
+    <label class="switch-row">
+      <span><strong>视频字幕</strong><small>自动翻译播放器已有字幕</small></span>
+      <input id="subtitles" type="checkbox"><i></i>
+    </label>
+    <div id="status" role="status"></div>
+    <footer><button id="options">设置 API 与翻译风格 <span>›</span></button></footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
