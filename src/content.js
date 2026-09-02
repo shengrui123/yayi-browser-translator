@@ -12,6 +12,7 @@
   let cfg = null;
   let pageTranslated = false;
   let translating = false;
+  let translationRun = 0;
   let subtitleEnabled = true;
   let overlay = null;
   let overlayVideo = null;
@@ -66,10 +67,11 @@
     return { leading, core: text.slice(leading.length, text.length - trailing.length), trailing };
   }
 
-  async function translateBatch(nodes) {
+  async function translateBatch(nodes, runId) {
     const parts = nodes.map((node) => splitWhitespace(node.nodeValue || ""));
     const response = await send({ type: "TRANSLATE", texts: parts.map((part) => part.core) });
     if (!response?.ok) throw new Error(response?.error || "翻译失败");
+    if (runId !== translationRun) return false;
     nodes.forEach((node, index) => {
       if (!node.isConnected) return;
       if (!originalText.has(node)) originalText.set(node, node.nodeValue);
@@ -77,11 +79,14 @@
       node.nodeValue = cfg.bilingual ? `${originalText.get(node)}\n${translated}` : translated;
       translatedText.set(node, node.nodeValue);
     });
+    return true;
   }
 
   async function translatePage() {
     if (translating) return;
+    const runId = ++translationRun;
     translating = true;
+    updateFloatingSwitcher();
     toast("正在识别并翻译可见文字…", "loading");
     try {
       const nodes = collectTextNodes();
@@ -92,7 +97,7 @@
       }
       const size = Math.max(1, Math.min(Number(cfg.batchSize) || 18, 40));
       for (let i = 0; i < nodes.length; i += size) {
-        await translateBatch(nodes.slice(i, i + size));
+        if (!await translateBatch(nodes.slice(i, i + size), runId)) return;
         toast(`翻译中 ${Math.min(i + size, nodes.length)}/${nodes.length}`, "loading");
       }
       pageTranslated = true;
@@ -100,7 +105,10 @@
     } catch (error) {
       toast(error.message, "error", 5000);
       throw error;
-    } finally { translating = false; }
+    } finally {
+      if (runId === translationRun) translating = false;
+      updateFloatingSwitcher();
+    }
   }
 
   function restorePage() {
@@ -110,7 +118,18 @@
     }
     originalText.clear();
     pageTranslated = false;
+    updateFloatingSwitcher();
     toast(`已还原 ${count} 段文字`);
+  }
+
+  async function togglePageTranslation() {
+    if (translating || pageTranslated || originalText.size) {
+      translationRun += 1;
+      translating = false;
+      restorePage();
+      return;
+    }
+    await translatePage();
   }
 
   function toast(message, type = "info", duration = 2600) {
@@ -265,11 +284,11 @@
     custom: { name: "自定义 API", badge: "API", model: () => cfg.customModel || "兼容接口" }
   };
 
-  function clampFloatingTop(top, height = 72) {
+  function clampFloatingTop(top, height = 58) {
     return Math.max(8, Math.min(top, Math.max(8, innerHeight - height - 8)));
   }
 
-  function floatingTopFromSettings(height = 72) {
+  function floatingTopFromSettings(height = 58) {
     const available = Math.max(1, innerHeight - height - 16);
     const value = Number(cfg.floatingButtonY);
     const ratio = Number.isFinite(value) ? Math.max(0, Math.min(value, 1)) : 0.38;
@@ -282,7 +301,10 @@
     const trigger = floatingSwitcher.querySelector(".yayi-floating-trigger");
     trigger.querySelector("b").textContent = "译";
     trigger.querySelector("small").textContent = provider.badge;
-    trigger.setAttribute("aria-label", `当前翻译服务：${provider.name}。点击切换，拖动可调整位置`);
+    const active = translating || pageTranslated || originalText.size > 0;
+    floatingSwitcher.classList.toggle("yayi-page-translated", active);
+    floatingSwitcher.classList.toggle("yayi-translating", translating);
+    trigger.setAttribute("aria-label", `${active ? "取消翻译并恢复原文" : "翻译当前网页"}。当前服务：${provider.name}；悬浮打开设置，拖动可调整位置`);
     floatingSwitcher.querySelectorAll("[data-provider]").forEach((button) => {
       const selected = button.dataset.provider === cfg.provider;
       button.classList.toggle("active", selected);
@@ -298,7 +320,14 @@
     floatingSwitcher.classList.toggle("yayi-side-right", normalizedSide === "right");
     floatingSwitcher.style.left = "";
     floatingSwitcher.style.right = "";
-    floatingSwitcher.style.top = `${clampFloatingTop(top, floatingSwitcher.offsetHeight || 72)}px`;
+    floatingSwitcher.style.top = `${clampFloatingTop(top, floatingSwitcher.offsetHeight || 58)}px`;
+  }
+
+  function openFloatingMenu() {
+    if (!floatingSwitcher?.isConnected || floatingSwitcher.classList.contains("yayi-dragging")) return;
+    floatingSwitcher.classList.toggle("yayi-menu-up", floatingSwitcher.getBoundingClientRect().top > innerHeight / 2);
+    floatingSwitcher.classList.add("yayi-menu-open");
+    floatingSwitcher.querySelector(".yayi-floating-trigger").setAttribute("aria-expanded", "true");
   }
 
   function closeFloatingMenu() {
@@ -315,7 +344,6 @@
     root.className = cfg.floatingButtonSide === "left" ? "yayi-side-left" : "yayi-side-right";
     root.innerHTML = `<button class="yayi-floating-trigger" type="button" aria-haspopup="true" aria-expanded="false"><b>译</b><small></small></button><div class="yayi-provider-menu" role="radiogroup" aria-label="切换翻译服务">
       ${Object.entries(PROVIDERS).map(([key, item]) => `<button type="button" role="radio" data-provider="${key}"><span><b>${item.name}</b><small></small></span><i></i></button>`).join("")}
-      <button class="yayi-provider-action" type="button"><span><b>翻译当前网页</b><small>使用当前服务翻译可见内容</small></span><strong>译</strong></button>
       <button class="yayi-provider-settings" type="button">打开完整设置 <span>↗</span></button>
     </div>`;
     document.documentElement.appendChild(root);
@@ -326,9 +354,17 @@
     const trigger = root.querySelector(".yayi-floating-trigger");
     let pointer = null;
     let dragged = false;
+    let closeTimer = 0;
+    const scheduleClose = () => {
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(closeFloatingMenu, 140);
+    };
+    root.addEventListener("pointerenter", () => { clearTimeout(closeTimer); openFloatingMenu(); });
+    root.addEventListener("pointerleave", scheduleClose);
+    root.addEventListener("focusin", () => { clearTimeout(closeTimer); openFloatingMenu(); });
+    root.addEventListener("focusout", (event) => { if (!root.contains(event.relatedTarget)) scheduleClose(); });
     trigger.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
-      closeFloatingMenu();
       const rect = root.getBoundingClientRect();
       pointer = { id: event.pointerId, startX: event.clientX, startY: event.clientY, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
       dragged = false;
@@ -338,9 +374,12 @@
     });
     addEventListener("pointermove", (event) => {
       if (!pointer || event.pointerId !== pointer.id) return;
-      if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5) dragged = true;
-      const width = root.offsetWidth || 48;
-      const height = root.offsetHeight || 72;
+      if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5 && !dragged) {
+        dragged = true;
+        closeFloatingMenu();
+      }
+      const width = root.offsetWidth || 58;
+      const height = root.offsetHeight || 58;
       root.style.left = `${Math.max(0, Math.min(event.clientX - pointer.offsetX, innerWidth - width))}px`;
       root.style.top = `${clampFloatingTop(event.clientY - pointer.offsetY, height)}px`;
     });
@@ -359,12 +398,10 @@
     };
     addEventListener("pointerup", finishDrag);
     addEventListener("pointercancel", finishDrag);
-    trigger.addEventListener("click", () => {
+    trigger.addEventListener("click", async () => {
       if (dragged) { dragged = false; return; }
-      const open = !root.classList.contains("yayi-menu-open");
-      root.classList.toggle("yayi-menu-up", root.getBoundingClientRect().top > innerHeight / 2);
-      root.classList.toggle("yayi-menu-open", open);
-      trigger.setAttribute("aria-expanded", String(open));
+      try { await togglePageTranslation(); } catch { /* error already shown */ }
+      openFloatingMenu();
     });
     root.querySelectorAll("[data-provider]").forEach((button) => button.addEventListener("click", async () => {
       const provider = button.dataset.provider;
@@ -374,10 +411,6 @@
       closeFloatingMenu();
       toast(`已切换至 ${PROVIDERS[provider].name}`, "success");
     }));
-    root.querySelector(".yayi-provider-action").addEventListener("click", async () => {
-      closeFloatingMenu();
-      await translatePage();
-    });
     root.querySelector(".yayi-provider-settings").addEventListener("click", async () => {
       closeFloatingMenu();
       try {
@@ -399,7 +432,7 @@
     const run = async () => {
       if (message.type === "TRANSLATE_PAGE") await translatePage();
       else if (message.type === "RESTORE_PAGE") restorePage();
-      else if (message.type === "TOGGLE_PAGE") pageTranslated ? restorePage() : await translatePage();
+      else if (message.type === "TOGGLE_PAGE") await togglePageTranslation();
       else if (message.type === "TRANSLATE_SELECTION") await translateSelection(message.text || getSelection()?.toString());
       else if (message.type === "TOGGLE_SUBTITLES") {
         subtitleEnabled = Boolean(message.enabled);

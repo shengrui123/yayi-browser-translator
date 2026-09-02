@@ -1,6 +1,6 @@
 {
   "name": "yayi-browser-translator",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "description": "面向 Chrome、Edge、Firefox 与 Tampermonkey 的中文网页和视频字幕翻译工具",
   "scripts": {

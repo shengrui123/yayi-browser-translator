@@ -50,12 +50,13 @@
 #yayi-floating-switcher.yayi-side-right { right: 0; }
 #yayi-floating-switcher.yayi-dragging { transition: none; cursor: grabbing; }
 #yayi-floating-switcher .yayi-floating-trigger {
-  all: initial; display: grid; place-items: center; gap: 2px; width: 46px; height: 72px; padding: 0; border: 1px solid rgba(255,255,255,.16);
+  all: initial; display: grid; place-items: center; gap: 2px; width: 58px; height: 58px; padding: 0; border: 1px solid rgba(255,255,255,.16); border-radius: 50%;
   background: linear-gradient(155deg, #286f55, #173f32); color: #fff; cursor: grab; user-select: none; touch-action: none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.12); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 22px rgba(6,24,18,.24); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-#yayi-floating-switcher.yayi-side-left .yayi-floating-trigger { border-left: 0; border-radius: 0 13px 13px 0; }
-#yayi-floating-switcher.yayi-side-right .yayi-floating-trigger { border-right: 0; border-radius: 13px 0 0 13px; }
+#yayi-floating-switcher.yayi-page-translated .yayi-floating-trigger { background: linear-gradient(155deg, #b85d45, #7c382b); }
+#yayi-floating-switcher.yayi-translating .yayi-floating-trigger { animation: yayi-floating-pulse 1s ease-in-out infinite alternate; }
+@keyframes yayi-floating-pulse { to { transform: scale(.92); opacity: .82; } }
 #yayi-floating-switcher .yayi-floating-trigger:focus-visible { outline: 3px solid #e8d597; outline-offset: 2px; }
 #yayi-floating-switcher .yayi-floating-trigger b { font: 700 22px/1 Georgia, "Songti SC", serif; }
 #yayi-floating-switcher .yayi-floating-trigger small { min-width: 22px; padding: 2px 4px; border-radius: 99px; background: rgba(255,255,255,.14); color: #dceae4; font: 700 8px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-align: center; }
@@ -63,8 +64,8 @@
   position: absolute; top: 0; display: none; width: 244px; overflow: hidden; margin: 0; padding: 8px; border: 1px solid rgba(23,63,50,.13); border-radius: 15px;
   background: rgba(251,249,243,.98); box-shadow: 0 20px 60px rgba(6,24,18,.22); backdrop-filter: blur(18px);
 }
-#yayi-floating-switcher.yayi-side-left .yayi-provider-menu { left: 55px; }
-#yayi-floating-switcher.yayi-side-right .yayi-provider-menu { right: 55px; }
+#yayi-floating-switcher.yayi-side-left .yayi-provider-menu { left: 62px; }
+#yayi-floating-switcher.yayi-side-right .yayi-provider-menu { right: 62px; }
 #yayi-floating-switcher.yayi-menu-up .yayi-provider-menu { top: auto; bottom: 0; }
 #yayi-floating-switcher.yayi-menu-open .yayi-provider-menu { display: grid; gap: 4px; }
 #yayi-floating-switcher .yayi-provider-menu > button {
@@ -79,11 +80,6 @@
 #yayi-floating-switcher .yayi-provider-menu > button i { width: 9px; height: 9px; border: 1px solid #aeb8b2; border-radius: 50%; }
 #yayi-floating-switcher .yayi-provider-menu > button.active { background: #e2ebe5; }
 #yayi-floating-switcher .yayi-provider-menu > button.active i { border: 3px solid #286f55; }
-#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action { min-height: 50px; margin-top: 4px; background: #173f32; color: #fff; }
-#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action:hover { background: #215a45; }
-#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action b { color: #fff; }
-#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action small { color: #bad0c6; }
-#yayi-floating-switcher .yayi-provider-action > strong { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: rgba(255,255,255,.13); font: 700 13px/1 Georgia, serif; }
 #yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings { min-height: 38px; margin-top: 4px; border-top: 1px solid #dce1dd; border-radius: 0; color: #426052; font-size: 10px; }
 #yayi-floating-switcher .yayi-provider-settings > span { display: inline; color: inherit; }
 @media (max-width: 420px) {

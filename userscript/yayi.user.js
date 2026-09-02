@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         雅译 · 网页与字幕翻译
 // @namespace    https://github.com/shengrui123/yayi-browser-translator
-// @version      0.1.3
+// @version      0.1.4
 // @description  将网页和视频字幕翻译成自然、准确的中文，支持 OpenAI、Gemini、DeepL 与自定义 API。
 // @author       雅译
 // @homepageURL  https://shengrui123.github.io/yayi-browser-translator/
@@ -69,6 +69,7 @@
   const translationCache = new Map();
   let cfg = loadSettings();
   let translating = false;
+  let translationRun = 0;
   let subtitleEnabled = cfg.translateSubtitles !== false;
   let overlayVideo = null;
   let overlaySource = "";
@@ -87,8 +88,8 @@
     #yayi-settings header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #d9d4c8;background:#f7f4eb;z-index:1}#yayi-settings h2{margin:0;font:600 22px Georgia,"Songti SC",serif}#yayi-settings header button{border:0;background:transparent;font-size:25px;cursor:pointer}
     #yayi-settings form{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:23px}#yayi-settings label{display:grid;gap:6px;color:#59635d;font-size:12px}#yayi-settings label.wide{grid-column:1/-1}#yayi-settings input,#yayi-settings select,#yayi-settings textarea{width:100%;padding:10px 11px;border:1px solid #cfcabf;border-radius:8px;background:#fff;color:#17231d;font:13px inherit}#yayi-settings textarea{min-height:74px;resize:vertical}#yayi-settings .check{display:flex;align-items:center;gap:8px}#yayi-settings .check input{width:auto}#yayi-settings footer{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding-top:8px}#yayi-settings footer button{padding:11px 18px;border:0;border-radius:8px;background:#173f32;color:#fff;font-weight:700;cursor:pointer}#yayi-settings footer button:first-child{background:#dedbd2;color:#17231d}
     #yayi-floating-switcher{all:initial;position:fixed;z-index:2147483646;top:38vh;display:block;box-sizing:border-box;color:#17231d;font:13px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;filter:drop-shadow(0 10px 24px #0618123d);touch-action:none}#yayi-floating-switcher,#yayi-floating-switcher *{box-sizing:border-box}#yayi-floating-switcher.yayi-side-left{left:0}#yayi-floating-switcher.yayi-side-right{right:0}
-    #yayi-floating-switcher .yayi-floating-trigger{all:initial;display:grid;place-items:center;gap:2px;width:46px;height:72px;padding:0;border:1px solid #ffffff29;background:linear-gradient(155deg,#286f55,#173f32);color:#fff;cursor:grab;user-select:none;touch-action:none;box-shadow:inset 0 1px 0 #ffffff1f}#yayi-floating-switcher.yayi-side-left .yayi-floating-trigger{border-left:0;border-radius:0 13px 13px 0}#yayi-floating-switcher.yayi-side-right .yayi-floating-trigger{border-right:0;border-radius:13px 0 0 13px}#yayi-floating-switcher .yayi-floating-trigger b{font:700 22px/1 Georgia,"Songti SC",serif}#yayi-floating-switcher .yayi-floating-trigger small{min-width:22px;padding:2px 4px;border-radius:99px;background:#ffffff24;color:#dceae4;font-size:8px;font-weight:700;line-height:1;text-align:center}
-    #yayi-floating-switcher .yayi-provider-menu{position:absolute;top:0;display:none;width:244px;overflow:hidden;margin:0;padding:8px;border:1px solid #173f3221;border-radius:15px;background:#fbf9f3fa;box-shadow:0 20px 60px #06181238;backdrop-filter:blur(18px)}#yayi-floating-switcher.yayi-side-left .yayi-provider-menu{left:55px}#yayi-floating-switcher.yayi-side-right .yayi-provider-menu{right:55px}#yayi-floating-switcher.yayi-menu-up .yayi-provider-menu{top:auto;bottom:0}#yayi-floating-switcher.yayi-menu-open .yayi-provider-menu{display:grid;gap:4px}#yayi-floating-switcher .yayi-provider-menu>button{all:initial;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:8px 10px;border:0;border-radius:9px;background:transparent;color:#17231d;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}#yayi-floating-switcher .yayi-provider-menu>button:hover{background:#e9eee8}#yayi-floating-switcher .yayi-provider-menu>button span{display:grid;gap:3px;text-align:left}#yayi-floating-switcher .yayi-provider-menu>button b{font-size:12px}#yayi-floating-switcher .yayi-provider-menu>button small{max-width:168px;overflow:hidden;color:#7a857f;font-size:10px;text-overflow:ellipsis;white-space:nowrap}#yayi-floating-switcher .yayi-provider-menu>button i{width:9px;height:9px;border:1px solid #aeb8b2;border-radius:50%}#yayi-floating-switcher .yayi-provider-menu>button.active{background:#e2ebe5}#yayi-floating-switcher .yayi-provider-menu>button.active i{border:3px solid #286f55}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action{min-height:50px;margin-top:4px;background:#173f32;color:#fff}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action:hover{background:#215a45}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action b{color:#fff}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-action small{color:#bad0c6}#yayi-floating-switcher .yayi-provider-action>strong{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#ffffff21;font:700 13px/1 Georgia,serif}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings{min-height:38px;margin-top:4px;border-top:1px solid #dce1dd;border-radius:0;color:#426052;font-size:10px}
+    #yayi-floating-switcher .yayi-floating-trigger{all:initial;display:grid;place-items:center;gap:2px;width:58px;height:58px;padding:0;border:1px solid #ffffff29;border-radius:50%;background:linear-gradient(155deg,#286f55,#173f32);color:#fff;cursor:grab;user-select:none;touch-action:none;box-shadow:inset 0 1px 0 #ffffff1f,0 8px 22px #0618123d}#yayi-floating-switcher.yayi-page-translated .yayi-floating-trigger{background:linear-gradient(155deg,#b85d45,#7c382b)}#yayi-floating-switcher.yayi-translating .yayi-floating-trigger{animation:yayi-floating-pulse 1s ease-in-out infinite alternate}@keyframes yayi-floating-pulse{to{transform:scale(.92);opacity:.82}}#yayi-floating-switcher .yayi-floating-trigger b{font:700 22px/1 Georgia,"Songti SC",serif}#yayi-floating-switcher .yayi-floating-trigger small{min-width:22px;padding:2px 4px;border-radius:99px;background:#ffffff24;color:#dceae4;font-size:8px;font-weight:700;line-height:1;text-align:center}
+    #yayi-floating-switcher .yayi-provider-menu{position:absolute;top:0;display:none;width:244px;overflow:hidden;margin:0;padding:8px;border:1px solid #173f3221;border-radius:15px;background:#fbf9f3fa;box-shadow:0 20px 60px #06181238;backdrop-filter:blur(18px)}#yayi-floating-switcher.yayi-side-left .yayi-provider-menu{left:62px}#yayi-floating-switcher.yayi-side-right .yayi-provider-menu{right:62px}#yayi-floating-switcher.yayi-menu-up .yayi-provider-menu{top:auto;bottom:0}#yayi-floating-switcher.yayi-menu-open .yayi-provider-menu{display:grid;gap:4px}#yayi-floating-switcher .yayi-provider-menu>button{all:initial;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:8px 10px;border:0;border-radius:9px;background:transparent;color:#17231d;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}#yayi-floating-switcher .yayi-provider-menu>button:hover{background:#e9eee8}#yayi-floating-switcher .yayi-provider-menu>button span{display:grid;gap:3px;text-align:left}#yayi-floating-switcher .yayi-provider-menu>button b{font-size:12px}#yayi-floating-switcher .yayi-provider-menu>button small{max-width:168px;overflow:hidden;color:#7a857f;font-size:10px;text-overflow:ellipsis;white-space:nowrap}#yayi-floating-switcher .yayi-provider-menu>button i{width:9px;height:9px;border:1px solid #aeb8b2;border-radius:50%}#yayi-floating-switcher .yayi-provider-menu>button.active{background:#e2ebe5}#yayi-floating-switcher .yayi-provider-menu>button.active i{border:3px solid #286f55}#yayi-floating-switcher .yayi-provider-menu .yayi-provider-settings{min-height:38px;margin-top:4px;border-top:1px solid #dce1dd;border-radius:0;color:#426052;font-size:10px}
     @media(max-width:620px){#yayi-settings form{grid-template-columns:1fr}#yayi-settings label.wide,#yayi-settings footer{grid-column:1}}
     @media(max-width:420px){#yayi-floating-switcher .yayi-provider-menu{width:min(244px,calc(100vw - 66px))}}
   `);
@@ -245,7 +246,9 @@
 
   async function translatePage() {
     if (translating) return;
+    const runId = ++translationRun;
     translating = true;
+    updateFloatingSwitcher();
     toast("正在识别并翻译可见文字…");
     try {
       const nodes = collectTextNodes();
@@ -255,6 +258,7 @@
         const group = nodes.slice(i, i + batchSize);
         const parts = group.map((node) => splitWhitespace(node.nodeValue || ""));
         const translated = await translate(parts.map((part) => part.core));
+        if (runId !== translationRun) return;
         group.forEach((node, index) => {
           if (!node.isConnected) return;
           if (!originalText.has(node)) originalText.set(node, node.nodeValue);
@@ -266,14 +270,28 @@
       }
       toast(`已翻译 ${nodes.length} 段文字`, "success");
     } catch (error) { toast(error.message, "error", 5000); }
-    finally { translating = false; }
+    finally {
+      if (runId === translationRun) translating = false;
+      updateFloatingSwitcher();
+    }
   }
 
   function restorePage() {
     let count = 0;
     for (const [node, value] of originalText) if (node.isConnected) { node.nodeValue = value; count += 1; }
     originalText.clear();
+    updateFloatingSwitcher();
     toast(`已还原 ${count} 段文字`);
+  }
+
+  async function togglePageTranslation() {
+    if (translating || originalText.size) {
+      translationRun += 1;
+      translating = false;
+      restorePage();
+      return;
+    }
+    await translatePage();
   }
 
   function toast(message, type = "info", duration = 2600) {
@@ -425,11 +443,11 @@
     custom: { name: "自定义 API", badge: "API", model: () => cfg.customModel || "兼容接口" }
   };
 
-  function clampFloatingTop(top, height = 72) {
+  function clampFloatingTop(top, height = 58) {
     return Math.max(8, Math.min(top, Math.max(8, innerHeight - height - 8)));
   }
 
-  function floatingTopFromSettings(height = 72) {
+  function floatingTopFromSettings(height = 58) {
     const available = Math.max(1, innerHeight - height - 16);
     const value = Number(cfg.floatingButtonY);
     const ratio = Number.isFinite(value) ? Math.max(0, Math.min(value, 1)) : 0.38;
@@ -441,7 +459,10 @@
     const provider = PROVIDERS[cfg.provider] || PROVIDERS.openai;
     const trigger = floatingSwitcher.querySelector(".yayi-floating-trigger");
     trigger.querySelector("small").textContent = provider.badge;
-    trigger.setAttribute("aria-label", `当前翻译服务：${provider.name}。点击切换，拖动可调整位置`);
+    const active = translating || originalText.size > 0;
+    floatingSwitcher.classList.toggle("yayi-page-translated", active);
+    floatingSwitcher.classList.toggle("yayi-translating", translating);
+    trigger.setAttribute("aria-label", `${active ? "取消翻译并恢复原文" : "翻译当前网页"}。当前服务：${provider.name}；悬浮打开设置，拖动可调整位置`);
     floatingSwitcher.querySelectorAll("[data-provider]").forEach((button) => {
       const selected = button.dataset.provider === cfg.provider;
       button.classList.toggle("active", selected);
@@ -457,7 +478,14 @@
     floatingSwitcher.classList.toggle("yayi-side-right", normalizedSide === "right");
     floatingSwitcher.style.left = "";
     floatingSwitcher.style.right = "";
-    floatingSwitcher.style.top = `${clampFloatingTop(top, floatingSwitcher.offsetHeight || 72)}px`;
+    floatingSwitcher.style.top = `${clampFloatingTop(top, floatingSwitcher.offsetHeight || 58)}px`;
+  }
+
+  function openFloatingMenu() {
+    if (!floatingSwitcher?.isConnected || floatingSwitcher.classList.contains("yayi-dragging")) return;
+    floatingSwitcher.classList.toggle("yayi-menu-up", floatingSwitcher.getBoundingClientRect().top > innerHeight / 2);
+    floatingSwitcher.classList.add("yayi-menu-open");
+    floatingSwitcher.querySelector(".yayi-floating-trigger").setAttribute("aria-expanded", "true");
   }
 
   function closeFloatingMenu() {
@@ -474,7 +502,6 @@
     root.className = cfg.floatingButtonSide === "left" ? "yayi-side-left" : "yayi-side-right";
     root.innerHTML = `<button class="yayi-floating-trigger" type="button" aria-haspopup="true" aria-expanded="false"><b>译</b><small></small></button><div class="yayi-provider-menu" role="radiogroup" aria-label="切换翻译服务">
       ${Object.entries(PROVIDERS).map(([key, item]) => `<button type="button" role="radio" data-provider="${key}"><span><b>${item.name}</b><small></small></span><i></i></button>`).join("")}
-      <button class="yayi-provider-action" type="button"><span><b>翻译当前网页</b><small>使用当前服务翻译可见内容</small></span><strong>译</strong></button>
       <button class="yayi-provider-settings" type="button">打开完整设置 <span>↗</span></button>
     </div>`;
     document.documentElement.appendChild(root);
@@ -485,20 +512,32 @@
     const trigger = root.querySelector(".yayi-floating-trigger");
     let pointer = null;
     let dragged = false;
+    let closeTimer = 0;
+    const scheduleClose = () => {
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(closeFloatingMenu, 140);
+    };
+    root.addEventListener("pointerenter", () => { clearTimeout(closeTimer); openFloatingMenu(); });
+    root.addEventListener("pointerleave", scheduleClose);
+    root.addEventListener("focusin", () => { clearTimeout(closeTimer); openFloatingMenu(); });
+    root.addEventListener("focusout", (event) => { if (!root.contains(event.relatedTarget)) scheduleClose(); });
     trigger.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
-      closeFloatingMenu();
       const rect = root.getBoundingClientRect();
       pointer = { id: event.pointerId, startX: event.clientX, startY: event.clientY, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
       dragged = false;
+      root.classList.add("yayi-dragging");
       root.style.left = `${rect.left}px`;
       root.style.right = "auto";
     });
     addEventListener("pointermove", (event) => {
       if (!pointer || event.pointerId !== pointer.id) return;
-      if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5) dragged = true;
-      const width = root.offsetWidth || 46;
-      const height = root.offsetHeight || 72;
+      if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) > 5 && !dragged) {
+        dragged = true;
+        closeFloatingMenu();
+      }
+      const width = root.offsetWidth || 58;
+      const height = root.offsetHeight || 58;
       root.style.left = `${Math.max(0, Math.min(event.clientX - pointer.offsetX, innerWidth - width))}px`;
       root.style.top = `${clampFloatingTop(event.clientY - pointer.offsetY, height)}px`;
     });
@@ -509,6 +548,7 @@
       const available = Math.max(1, innerHeight - rect.height - 16);
       const ratio = Math.max(0, Math.min((rect.top - 8) / available, 1));
       pointer = null;
+      root.classList.remove("yayi-dragging");
       cfg.floatingButtonSide = side;
       cfg.floatingButtonY = ratio;
       placeFloatingSwitcher(side, rect.top);
@@ -516,12 +556,10 @@
     };
     addEventListener("pointerup", finishDrag);
     addEventListener("pointercancel", finishDrag);
-    trigger.addEventListener("click", () => {
+    trigger.addEventListener("click", async () => {
       if (dragged) { dragged = false; return; }
-      const open = !root.classList.contains("yayi-menu-open");
-      root.classList.toggle("yayi-menu-up", root.getBoundingClientRect().top > innerHeight / 2);
-      root.classList.toggle("yayi-menu-open", open);
-      trigger.setAttribute("aria-expanded", String(open));
+      await togglePageTranslation();
+      openFloatingMenu();
     });
     root.querySelectorAll("[data-provider]").forEach((button) => button.addEventListener("click", () => {
       const provider = button.dataset.provider;
@@ -529,10 +567,6 @@
       closeFloatingMenu();
       toast(`已切换至 ${PROVIDERS[provider].name}`, "success");
     }));
-    root.querySelector(".yayi-provider-action").addEventListener("click", () => {
-      closeFloatingMenu();
-      translatePage();
-    });
     root.querySelector(".yayi-provider-settings").addEventListener("click", () => { closeFloatingMenu(); openSettings(); });
     addEventListener("resize", () => placeFloatingSwitcher(), { passive: true });
     addEventListener("pointerdown", (event) => { if (!root.contains(event.target)) closeFloatingMenu(); }, { passive: true });
